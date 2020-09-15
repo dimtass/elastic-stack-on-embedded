@@ -1,0 +1,43 @@
+# Description: Elasticsearch/Kibana setup for testing see more here: https://www.stupid-projects.com/using-elastic-stack-elk-on-embedded-part-1/
+# Author: Dimitris Tassopoulos <dimtass@gmail.com>
+#
+# Usage:
+#   docker-compose -f docker-compose.yml up
+
+version: '3'
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.9.1
+    container_name: elastic_test_server
+    environment:
+      - bootstrap.memory_lock=true
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - TAKE_FILE_OWNERSHIP=true
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - /rnd2/elasticsearch/data:/usr/share/elasticsearch/data
+      - /rnd2/elasticsearch/log:/usr/share/elasticsearch/logs
+    ports:
+      - 9200:9200
+      - 9300:9300
+    networks:
+      - elastic
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.9.1
+    container_name: kibana_test
+    ports:
+      - 5601:5601
+    environment:
+      ELASTICSEARCH_URL: http://elastic_test_server:9200
+      ELASTICSEARCH_HOSTS: http://elastic_test_server:9200
+      SERVER_HOST: 0.0.0.0
+    networks:
+      - elastic
+
+networks:
+  elastic:
+    driver: bridge
